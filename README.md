@@ -1,66 +1,142 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Digital Marketing Monitoring Assistant
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem backend berbasis Laravel 10 untuk menganalisa, mencatat, dan melaporkan event pemasaran digital (seperti dari Meta Pixel) dengan menggunakan integrasi Telegram Bot dan AI Google Gemini.
 
-## About Laravel
+## Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. **Meta Pixel Webhook Ingestion**: Endpoint untuk menerima `payload` event dari Meta Pixel, menyimpannya ke database, dan memberikan alert Telegram *real-time* khusus untuk event bervalue tinggi (misal: "Purchase").
+2. **AI Analytical Assistant**: Chatbot Telegram khusus Admin yang dapat ditanyai mengenai ringkasan data trafik atau transaksi hari ini, diproses cerdas menggunakan Google Gemini (gemini-1.5-flash).
+3. **Daily Automated Reporting**: Cron Job harian yang otomatis merangkum event dan total transaksi hari sebelumnya, lalu mengirimkannya ke Telegram admin.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Prasyarat (Prerequisites)
 
-## Learning Laravel
+- PHP >= 8.1
+- Composer
+- Database MySQL/MariaDB
+- Akun Telegram (untuk mendapatkan `TELEGRAM_BOT_TOKEN` via BotFather dan `TELEGRAM_ADMIN_ID`)
+- Akun Google AI Studio (untuk mendapatkan `GEMINI_API_KEY`)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 💻 Cara Menjalankan di Lokal (Local Development)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Proses pengembangan di lokal memerlukan ekstensi seperti Ngrok karena Telegram memerlukan URL publik yang mendukung HTTPS untuk webhook.
 
-## Laravel Sponsors
+### 1. Instalasi dan Setup Dasar
+1. **Clone repositori ini:**
+   ```bash
+   git clone https://github.com/dhabyap/bot-analysis.git
+   cd bot-analysis
+   ```
+2. **Install dependency Composer:**
+   ```bash
+   composer install
+   ```
+3. **Setup environment:**
+   ```bash
+   cp .env.example .env
+   ```
+4. **Generate Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Konfigurasi Database & API Keys
+Buka file `.env` dan atur parameter berikut:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nama_database_lokal_anda
+DB_USERNAME=root
+DB_PASSWORD=
 
-### Premium Partners
+TELEGRAM_BOT_TOKEN=token_bot_dari_botfather
+TELEGRAM_ADMIN_ID=id_telegram_anda
+GEMINI_API_KEY=api_key_dari_google_ai_studio
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 3. Jalankan Migrasi
+```bash
+php artisan migrate
+```
 
-## Contributing
+### 4. Setup Webhook (Wajib untuk Telegram)
+Telegram webhook hanya bisa ditembak ke URL publik (HTTPS).
+1. Jalankan server Laravel:
+   ```bash
+   php artisan serve
+   ```
+   *(Server akan berjalan di `http://127.0.0.1:8000`)*
+2. Buka *tunnel* menggunakan [Ngrok](https://ngrok.com/):
+   ```bash
+   ngrok http 8000
+   ```
+3. Copy URL HTTPS dari Ngrok (misal `https://1234-abcd.ngrok-free.app`), lalu daftarkan webhook ke Telegram. Buka browser dan paste URL ini (ganti token dan url):
+   ```
+   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://<NGROK_URL>/api/webhook/telegram
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+*(Opsional)* Anda juga bisa menguji Cron Job harian dengan:
+```bash
+php artisan app:daily-report
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🌍 Cara Menjalankan di Server Production (cPanel / Shared Hosting)
 
-## Security Vulnerabilities
+Laravel 10 pada proyek ini telah dikonfigurasi secara *synchronous* agar sepenuhnya kompatibel dengan shared hosting.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 1. Upload dan Instalasi
+1. Clone repositori ke server via Terminal/SSH.
+   ```bash
+   git clone https://github.com/dhabyap/bot-analysis.git
+   ```
+   *Atau, upload file .zip dari lokal ke File Manager cPanel lalu extract.*
+2. Jalankan `composer install --no-dev --optimize-autoloader` via SSH.
+3. Ubah `.env.example` menjadi `.env` dan isi dengan detail Database Production serta API Keys (Telegram & Gemini).
 
-## License
+### 2. Setup Webhook Server
+Karena server production sudah memiliki nama domain (misal `https://domainanda.com`), daftarkan Webhook Telegram dengan URL tersebut:
+1. Buka browser dan arahkan ke:
+   ```
+   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://domainanda.com/api/webhook/telegram
+   ```
+   Jika muncul respon `{"ok":true,"result":true,"description":"Webhook was set"}`, berarti bot sudah aktif.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 3. Setup Cron Job (Daily Report)
+Agar fungsi *Daily Automated Reporting* berjalan otomatis setiap pagi (diatur jam `07:00` pada `routes/console.php`):
+1. Masuk ke cPanel -> Menu **Cron Jobs**.
+2. Tambahkan Cron Job baru untuk berjalan **setiap menit** (`* * * * *`).
+3. Isi command dengan path ke PHP dan artisan, contoh:
+   ```bash
+   /usr/local/bin/php /home/username_cpanel/public_html/bot-analysis/artisan schedule:run >> /dev/null 2>&1
+   ```
+   *(Pastikan absolute path ke `php` dan `artisan` disesuaikan dengan environment cPanel anda).*
+
+---
+
+## 🤖 Cara Penggunaan Bot & Sistem
+
+### 1. Menerima Data Pemasaran (Webhook Meta Pixel)
+Sistem menerima data payload HTTP POST pada endpoint:
+`POST https://domainanda.com/api/webhook/meta`
+
+- Meta Pixel atau API harus mengirimkan data dalam format JSON berisi minimal parameter `event_name`. 
+- Parameter `custom_data.value` akan dibaca jika ada.
+- Jika `event_name` adalah `Purchase` atau event bernilai tinggi, bot akan otomatis mengirimkan notifikasi instan ke Telegram Admin.
+
+### 2. Berinteraksi dengan AI Assistant di Telegram
+1. Buka chat Telegram Anda dengan Bot yang telah didaftarkan.
+2. Bot akan memverifikasi apakah pengirim pesan adalah **Admin** (berdasarkan pengecekan `TELEGRAM_ADMIN_ID`).
+3. Jika admin, ajukan pertanyaan ringan terkait trafik hari ini:
+   - *"Halo, ada berapa total transaksi hari ini?"*
+   - *"Tolong berikan ringkasan trafik Meta Ads kita"*
+4. Sistem akan menarik data dari tabel `meta_events` pada hari ini (`today()`), menyusunnya menjadi konteks, lalu mengirimkannya ke Google Gemini.
+5. Gemini akan merespon pertanyaan Anda dengan laporan berdasarkan data tersebut.
+
+### 3. Menerima Laporan Harian
+Jika Cron Job aktif, sistem secara otomatis akan menarik data agregasi trafik `H-1` dan mengirimkannya pada pukul `07:00` pagi waktu server ke chat Telegram admin.
